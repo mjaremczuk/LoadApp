@@ -12,12 +12,12 @@
 
     <ImageView
         android:id="@+id/main_image"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
         android:background="@color/colorPrimaryDark"
         android:padding="24dp"
-        app:layout_constraintDimensionRatio="h,16:9"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="w,10:16"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_baseline_cloud_download_24"
@@ -25,11 +25,12 @@
 
     <RadioGroup
         android:id="@+id/radio_group"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:layout_constraintBottom_toTopOf="@+id/custom_button"
-        app:layout_constraintTop_toBottomOf="@+id/main_image">
+        app:layout_constraintStart_toEndOf="@+id/main_image"
+        app:layout_constraintTop_toTopOf="parent">
 
         <RadioButton
             android:layout_width="match_parent"
@@ -58,7 +59,7 @@
         app:defaultColor="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/main_image"
         app:ovalProgressColor="@color/colorAccent"
         app:progressColor="@color/colorPrimaryDark"
         app:progressText="@string/button_loading" />

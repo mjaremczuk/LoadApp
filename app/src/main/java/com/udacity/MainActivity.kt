@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
-
+//add view model with selected option and observe for change
         custom_button.setOnClickListener {
             download()
         }
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun download() {
         val request =
-            DownloadManager.Request(Uri.parse(URL))
+            DownloadManager.Request(Uri.parse(GLIDE_URL))
                 .setTitle(getString(R.string.app_name))
                 .setDescription(getString(R.string.app_description))
                 .setRequiresCharging(false)
@@ -58,7 +58,14 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val URL =
             "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
+        private const val GLIDE_URL = "https://github.com/bumptech/glide/archive/master.zip"
+        private const val RETROFIT_URL = "https://github.com/square/retrofit/archive/master.zip"
         private const val CHANNEL_ID = "channelId"
     }
 
+    enum class Download(val url: String) {
+        UDACITY(URL),
+        GLIDE(GLIDE_URL),
+        RETROFIT(RETROFIT_URL)
+    }
 }
