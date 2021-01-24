@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -15,6 +16,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
@@ -32,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     }
     private lateinit var pendingIntent: PendingIntent
     private lateinit var action: NotificationCompat.Action
+    private val downloadManager: DownloadManager by lazy { getSystemService(DOWNLOAD_SERVICE) as DownloadManager }
 
     val viewModel: MainViewModel by lazy {
         ViewModelProvider(
@@ -65,15 +68,24 @@ class MainActivity : AppCompatActivity() {
                 download(it)
             }
         }
+        viewModel.downloadToCancel.observe(this) {
+            it?.let {
+                cancelDownload(it)
+            }
+        }
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(receiver)
         _binding = null
     }
 
     private fun download(download: MainViewModel.DownloadInfo) {
+        binding.content.customButton.setOnEndAnimationAction {
+            binding.content.customButton.restartAnimation()
+        }
         val request =
             DownloadManager.Request(Uri.parse(download.download.url))
                 .setTitle(download.notificationTitle)
@@ -82,10 +94,13 @@ class MainActivity : AppCompatActivity() {
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
 
-        val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         val id = downloadManager.enqueue(request)
         viewModel.addDownload(download.download, id)
         //schedule observing progress in view model and on update notify button to make 2nd type of progress?
+    }
+
+    private fun cancelDownload(id: Long) {
+        downloadManager.remove(id)
     }
 
     private fun showToast(message: MainViewModel.Message.Toast) {
@@ -97,6 +112,11 @@ class MainActivity : AppCompatActivity() {
         createNotificationAction(message)
         val contentPendingIntent = createPendingIntent(message)
 
+        val downloadImage = BitmapFactory.decodeResource(
+            applicationContext.resources,
+            R.drawable.ic_launcher_background
+        )
+
         val builder = NotificationCompat.Builder(
             this,
             message.channelId
@@ -107,6 +127,7 @@ class MainActivity : AppCompatActivity() {
             setAutoCancel(true)
             setContentIntent(contentPendingIntent)
             addAction(action)
+            setLargeIcon(downloadImage)
         }
 
         notificationManager.notify(message.id, builder.build())
@@ -129,12 +150,12 @@ class MainActivity : AppCompatActivity() {
                 putExtra(DetailActivity.EXTRA_DOWNLOAD_FILE, message.download.ordinal)
                 putExtra(DetailActivity.EXTRA_DOWNLOAD_STATUS, message.downloadStatus)
             }
-        pendingIntent = PendingIntent.getActivity(
-            this,
-            message.id,
-            contentIntent,
-            PendingIntent.FLAG_CANCEL_CURRENT
-        )
+
+        pendingIntent = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(contentIntent)
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+        } as PendingIntent
+
         action =
             NotificationCompat.Action(
                 R.drawable.ic_baseline_cloud_download_24,
@@ -176,6 +197,7 @@ class MainActivity : AppCompatActivity() {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
             val status = getDownloadStatus(id!!)
             viewModel.onDownloadComplete(id, status)
+            binding.content.customButton.setOnEndAnimationAction(null)
         }
     }
 }

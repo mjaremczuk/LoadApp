@@ -19,4 +19,9 @@
     <string name="select_radio_button">Select one of the options to start download</string>
     <string name="action_text">Show details</string>
     <string name="custom_download_source">Custom download source</string>
+    <string name="download_failed">Fail</string>
+    <string name="download_successful">Success</string>
+    <string name="status">Status:</string>
+    <string name="file_name">File name:</string>
+    <string name="ok">OK</string>
 </resources>

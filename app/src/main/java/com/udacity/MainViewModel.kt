@@ -18,10 +18,15 @@ class MainViewModel(private val appContext: Application) : ViewModel() {
     val downloadUrl: LiveData<DownloadInfo?>
         get() = _downloadUrl
 
-    private var downloadsMap: Map<Long, Download> = emptyMap()
+    private val _downloadToCancel: MutableLiveData<Long?> = MutableLiveData(null)
+    val downloadToCancel: LiveData<Long?>
+        get() = _downloadToCancel
+
+    private var scheduledDownload: Pair<Long, Download>? = null
 
     fun addDownload(download: Download, id: Long) {
-        downloadsMap = downloadsMap.plus(id to download)
+        _downloadToCancel.value = scheduledDownload?.first
+        scheduledDownload = id to download
         _downloadUrl.value = null
     }
 
@@ -46,15 +51,16 @@ class MainViewModel(private val appContext: Application) : ViewModel() {
     }
 
     fun onDownloadComplete(id: Long?, downloadStatus: Int) {
-        if (downloadsMap.containsKey(id)) {
+        scheduledDownload?.let {
+            if (it.first != id) return
             _message.value = Message.Notification(
-                id!!.toInt(),
+                it.first.toInt(),
                 appContext.getString(R.string.notification_title),
                 appContext.getString(R.string.notification_description),
                 appContext.getString(R.string.channel_id),
                 appContext.getString(R.string.channel_name),
                 appContext.getString(R.string.action_text),
-                downloadsMap[id]!!,
+                it.second,
                 downloadStatus
             )
         }

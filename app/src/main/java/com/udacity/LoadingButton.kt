@@ -6,12 +6,8 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.Interpolator
 import androidx.core.animation.addListener
 import androidx.core.content.withStyledAttributes
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import kotlin.properties.Delegates
 
 class LoadingButton @JvmOverloads constructor(
@@ -31,7 +27,6 @@ class LoadingButton @JvmOverloads constructor(
 
     private var textToDraw: String? = null
     private var progressRect = Rect(0, 0, 0, 0)
-    private var ovalRectF = RectF(0F, 0F, 0F, 0F)
     private val progressPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
@@ -43,6 +38,7 @@ class LoadingButton @JvmOverloads constructor(
         typeface = Typeface.SANS_SERIF
     }
     private val valueAnimator = ValueAnimator()
+    private var onAnimationEnd: (() -> Unit)? = null
 
     private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
         when (new) {
@@ -125,8 +121,16 @@ class LoadingButton @JvmOverloads constructor(
 
     override fun performClick(): Boolean {
         super.performClick()
-        buttonState = ButtonState.Clicked
+        restartAnimation()
         return true
+    }
+
+    fun restartAnimation() {
+        buttonState = ButtonState.Clicked
+    }
+
+    fun setOnEndAnimationAction(onEnd: (() -> Unit)?) {
+        onAnimationEnd = onEnd
     }
 
     private fun showProgress() {
@@ -145,9 +149,12 @@ class LoadingButton @JvmOverloads constructor(
                 }
                 invalidate()
             }
-//            repeatCount = -1
+            repeatCount = 0
             addListener(
-                onEnd = { buttonState = ButtonState.Completed }
+                onEnd = {
+                    buttonState = ButtonState.Completed
+                    onAnimationEnd?.invoke()
+                }
             )
             duration = animationDuration
             start()
