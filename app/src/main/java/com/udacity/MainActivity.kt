@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
 
         pendingIntent = TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(contentIntent)
-            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+            getPendingIntent(message.id, PendingIntent.FLAG_UPDATE_CURRENT)
         } as PendingIntent
 
         action =
